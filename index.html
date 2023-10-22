@@ -3,15 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0>
-    <style> body {padding: 0; margin: 0;} #dropzone { padding: 24px; border-style: dashed;} </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.1/p5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.1/addons/p5.dom.min.js"></script>
-    <script src="filelib.js"></script>
-    <script src="speccy.js"></script>
+    <style> body {padding: 1em; margin: 0;} #dropzone { padding: 24px; border-style: dashed;} </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="./src/filelib.js"></script>
+    <script src="./src/speccy.js"></script>
   </head>
   <body>
     <p>Speccy Vision</p>
-    <div id='canvas-holder'/>
+    <div id='canvas-holder'>
     </div>
     <label for="dither">Dither Factor</label>
     <input type="range" id="start" name="dither"

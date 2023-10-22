@@ -33,7 +33,6 @@ function dot(a, b) {
 
 // sqrt distance between two arrays
 function vdist(a, b) {
-
 	let delta = sub(a, b);
 	return dot(delta, delta);
 }
@@ -43,7 +42,7 @@ function rgb2speccy(r, g, b, palette, start, end) {
 	let best_color = start;
 	let best_distance_sqrt = vdist(palette[start], [r, g, b]);
 
-	for (var i = start + 1; i < end; i++) {
+	for (let i = start + 1; i < end; i++) {
 		let d = vdist(palette[i], [r, g, b]);
 		if (d < best_distance_sqrt) {
 			best_distance_sqrt = d;
@@ -266,7 +265,7 @@ function processImageDither(img_in, img_out) {
 	img_out.updatePixels();
 }
 
-var img_in = null, img_out;
+var img_in = null, img_out, defaultImage
 let checkbox;
 let canvas;
 let fileURL = '';
@@ -274,15 +273,25 @@ let backgroundColor = 'CORNFLOWERBLUE';
 let slider;
 let dirty = false;
 let dropdown;
-const scaleFactor = 2; // scale of output makes for a looooot of processing ouch
+const scaleFactor = 1; // scale of output makes for a looooot of processing ouch
+
+function preload() {
+	defaultImage = loadImage('./assets/sun.speccy.demo.jpeg')
+}
 
 function setup() {
 	canvas = createCanvas(256 * scaleFactor, 192 * scaleFactor);
+	canvas.style(`width: ${256 * scaleFactor * 2}px;`)
+	canvas.style(`height: ${192 * scaleFactor * 2}px;`)
+
 	canvas.parent('canvas-holder');
 	canvas.drop(gotFile);
 
 	img_in = createImage(256 * scaleFactor, 192 * scaleFactor);
 	img_out = createImage(256 * scaleFactor, 192 * scaleFactor);
+
+	img_in.drawingContext.drawImage(defaultImage.canvas, 0, 0, 256 * scaleFactor, 192 * scaleFactor);
+	dirty = true
 
 	slider = select("#start");
 	checkbox = select('#ditheronly', false);
@@ -291,7 +300,8 @@ function setup() {
 	dropdown.option('RGB', 'rgb');
 	dropdown.option('RGB Fixed', 'rgbfixed');
 	dropdown.option('HSL', 'hsl');
-	dropdown.option('HSL Fixed', 'hslfixed');
+	dropdown.option('HSL Fixed', 'hslfixed')
+	dropdown.selected('hslfixed')
 }
 
 function gotFile(file) {
@@ -306,7 +316,10 @@ function gotFile(file) {
 	raw.src = file.data;
 	raw.onload = () => {
 		// resize and render the image into the destination image for processing
+		// TODO: scale the window to match the image (optionally?)
+		// img_in.drawingContext.drawImage(raw, 0, 0, 256 * scaleFactor, 192 * scaleFactor);
 		img_in.drawingContext.drawImage(raw, 0, 0, 256 * scaleFactor, 192 * scaleFactor);
+
 		dirty = true;
 	}
 }
@@ -330,7 +343,8 @@ function draw() {
 		dirty = true;
 	}
 
-	if (dirty && fileURL !== '') {
+	// if (dirty && fileURL !== '') {
+	if (dirty) {
 		dirty = false;
 
 		if (!colorizeCells) {
