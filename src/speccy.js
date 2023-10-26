@@ -21,6 +21,7 @@ var speccy_palette = [
 
 // subtract two arrays
 function sub(a, b) {
+	// NOTE: will throw Error if b.length < a.length
 	return a.map((x, i) => x - b[i]);
 }
 
@@ -182,14 +183,19 @@ function dither(pixel, c, r) {
 }
 
 // return block offset for a given pixel
+// uses a global
 function pix2block(c, r) {
 	const x = int(c / 8);
 	const y = int(r / 8);
-	return y * 32 * scaleFactor + x;
+	const offset = Math.ceil(cWidth / 16) * 2
+	return y * offset * scaleFactor + x;
 }
 
+// uses globals for now UGH
 function createBlockBins() {
-	let blocks = new Array((32 * scaleFactor) * (24 * scaleFactor));  // 32 * 16 x 24 * 16 => 512 x 384 image
+	const binWidth = Math.ceil(cWidth / 16) * 2
+	const binHeight = Math.ceil(cHeight / 16) * 2
+	let blocks = new Array(binWidth * binHeight);  // 32 * 16 x 24 * 16 => 512 x 384 image := original size x scaleFactor of 2
 
 	for (let i = 0; i < blocks.length; i++) {
 		blocks[i] = new Array(16).fill(0);
@@ -268,6 +274,8 @@ function processImageDither(img_in, img_out) {
 var img_in = null, img_out, defaultImage
 let checkbox;
 let canvas;
+let cWidth = 0
+let cHeight = 0
 let fileURL = '';
 let backgroundColor = 'CORNFLOWERBLUE';
 let slider;
@@ -280,17 +288,15 @@ function preload() {
 }
 
 function setup() {
-	canvas = createCanvas(256 * scaleFactor, 192 * scaleFactor);
-	canvas.style(`width: ${256 * scaleFactor * 2}px;`)
-	canvas.style(`height: ${192 * scaleFactor * 2}px;`)
+	cWidth = defaultImage.width
+	cHeight = defaultImage.height
 
-	canvas.parent('canvas-holder');
-	canvas.drop(gotFile);
+	setupCanvas(cWidth, cHeight)
+	// setupWorkingImages(cWidth, cHeight)
 
-	img_in = createImage(256 * scaleFactor, 192 * scaleFactor);
-	img_out = createImage(256 * scaleFactor, 192 * scaleFactor);
+	setupWorkingImages(cWidth, cHeight)
 
-	img_in.drawingContext.drawImage(defaultImage.canvas, 0, 0, 256 * scaleFactor, 192 * scaleFactor);
+	img_in.drawingContext.drawImage(defaultImage.canvas, 0, 0, cWidth * scaleFactor, cHeight * scaleFactor);
 	dirty = true
 
 	slider = select("#start");
@@ -302,6 +308,20 @@ function setup() {
 	dropdown.option('HSL', 'hsl');
 	dropdown.option('HSL Fixed', 'hslfixed')
 	dropdown.selected('hslfixed')
+}
+
+const setupCanvas = (width, height) => {
+	canvas = createCanvas(width * scaleFactor, height * scaleFactor);
+	canvas.style(`width: ${width * scaleFactor * 2}px;`)
+	canvas.style(`height: ${height * scaleFactor * 2}px;`)
+
+	canvas.parent('canvas-holder');
+	canvas.drop(gotFile);
+}
+
+function setupWorkingImages(width, height) {
+	img_in = createImage(width * scaleFactor, height * scaleFactor);
+	img_out = createImage(width * scaleFactor, height * scaleFactor);
 }
 
 function gotFile(file) {
@@ -317,8 +337,11 @@ function gotFile(file) {
 	raw.onload = () => {
 		// resize and render the image into the destination image for processing
 		// TODO: scale the window to match the image (optionally?)
-		// img_in.drawingContext.drawImage(raw, 0, 0, 256 * scaleFactor, 192 * scaleFactor);
-		img_in.drawingContext.drawImage(raw, 0, 0, 256 * scaleFactor, 192 * scaleFactor);
+		cWidth = raw.width
+		cHeight = raw.height
+		setupCanvas(cWidth, cHeight)
+		setupWorkingImages(cWidth, cHeight)
+		img_in.drawingContext.drawImage(raw, 0, 0, cWidth * scaleFactor, cHeight * scaleFactor);
 
 		dirty = true;
 	}
@@ -343,7 +366,6 @@ function draw() {
 		dirty = true;
 	}
 
-	// if (dirty && fileURL !== '') {
 	if (dirty) {
 		dirty = false;
 
@@ -364,6 +386,7 @@ function draw() {
 		}
 	}
 
+	// well, we don't need THIS in here
 	fill(255);
 	noStroke();
 	textSize(18);
